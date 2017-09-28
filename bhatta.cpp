@@ -10,15 +10,15 @@ float bhatt(vector<int> hist1, vector<int> hist2);
 
 int main()
 {
-    std::vector<int> h1 { 1, 2, 3, 4, 5, 6, 7, 8 };
-    std::vector<int> h2 { 6, 5, 4, 3, 2, 1, 0, 0 };
-    std::vector<int> h3 { 8, 7, 6, 5, 4, 3, 2, 1 };
-    std::vector<int> h4 { 1, 2, 3, 4, 4, 3, 2, 1 };
-    std::vector<int> h5 { 8, 8, 8, 8, 8, 8, 8, 8 };
+    vector<int> h1 { 1, 2, 3, 4, 5, 6, 7, 8 };
+    vector<int> h2 { 6, 5, 4, 3, 2, 1, 0, 0 };
+    vector<int> h3 { 8, 7, 6, 5, 4, 3, 2, 1 };
+    vector<int> h4 { 1, 2, 3, 4, 4, 3, 2, 1 };
+    vector<int> h5 { 8, 8, 8, 8, 8, 8, 8, 8 };
     
-    std::vector<vector<int>> h { h1, h2, h3, h4, h5 };
+    vector<vector<int>> h { h1, h2, h3, h4, h5 };
 
-    std::vector<vector<float>> scores;
+    vector<vector<float>> scores;
 
     for (int i=0; i<h.size(); i++)
     {
@@ -42,7 +42,7 @@ int main()
 
 float mean(vector<int> hist)
 {
-    float acc = std::accumulate(hist.begin(), hist.end(), 0.0);
+    float acc = accumulate(hist.begin(), hist.end(), 0.0);
     return acc/hist.size();
 }
 
