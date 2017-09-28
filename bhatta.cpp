@@ -3,38 +3,32 @@
 #include <numeric>
 #include <math.h>
 #include <map>
+#include <set>
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <assert.h>
 
 using namespace std;
 
 typedef map<string, int> Histogram;
 
-float mean(vector<int> hist);
-float bhatt(vector<int> hist1, vector<int> hist2);
+float mean(Histogram hist);
+float bhatta(Histogram hist1, Histogram hist2);
 vector<Histogram> reads_file(string file_name);
 
 int main()
 {
-    vector<Histogram> histograms = reads_file("dataset/TestApr03.txt");
-
-    vector<int> h1 { 1, 2, 3, 4, 5, 6, 7, 8 };
-    vector<int> h2 { 6, 5, 4, 3, 2, 1, 0, 0 };
-    vector<int> h3 { 8, 7, 6, 5, 4, 3, 2, 1 };
-    vector<int> h4 { 1, 2, 3, 4, 4, 3, 2, 1 };
-    vector<int> h5 { 8, 8, 8, 8, 8, 8, 8, 8 };
-    
-    vector<vector<int>> h { h1, h2, h3, h4, h5 };
+    vector<Histogram> histograms = reads_file("dataset/TestMay03.txt");
 
     vector<vector<float>> scores;
 
-    for (int i=0; i<h.size(); i++)
+    for (int i=0; i<histograms.size(); i++)
     {
         vector<float> score;
 
-        for (int j=0; j<h.size(); j++)
-            score.push_back(bhatt(h[i], h[j]));
+        for (int j=0; j<histograms.size(); j++)
+            score.push_back(bhatta(histograms[i], histograms[j]));
 
         scores.push_back(score);
     }
@@ -49,24 +43,33 @@ int main()
     return 0;
 }
 
-float mean(vector<int> hist)
+float mean(Histogram hist)
 {
-    float acc = accumulate(hist.begin(), hist.end(), 0.0);
+    float acc = 0;
+    for (auto &pair : hist)
+        acc += pair.second;
+    
     return acc/hist.size();
 }
 
-float bhatt(vector<int> hist1, vector<int> hist2)
+float bhatta(Histogram hist1, Histogram hist2)
 {
     float h1_ = mean(hist1);
 
     float h2_ = mean(hist2);
-    
+
     float score = 0;
 
-    for (int i=0; i<8; i++)
-    {
-        score += sqrt(hist1[i] * hist2[i]);
-    }
+    // set of keys (features) that exist in both maps (histograms)
+    set<string> keys;
+    for (auto &pair : hist1)
+        if (hist2.find(pair.first) != hist2.end())
+            keys.insert(pair.first);
+
+    for (auto &key : keys)
+        score += sqrt(hist1.at(key) * hist2.at(key));
+
+    // BUG (?): o valor calculado e passado pra esse `sqrt` mais externo é negativo, o que retorna um nan
 
     score = sqrt( 1 - ( 1 / sqrt(h1_ * h2_ * 8 * 8) ) * score );
     
