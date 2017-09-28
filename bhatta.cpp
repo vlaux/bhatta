@@ -2,14 +2,23 @@
 #include <vector>
 #include <numeric>
 #include <math.h>
+#include <map>
+#include <fstream>
+#include <string>
+#include <sstream>
 
 using namespace std;
 
+typedef map<string, int> Histogram;
+
 float mean(vector<int> hist);
 float bhatt(vector<int> hist1, vector<int> hist2);
+vector<Histogram> reads_file(string file_name);
 
 int main()
 {
+    vector<Histogram> histograms = reads_file("dataset/TestApr03.txt");
+
     vector<int> h1 { 1, 2, 3, 4, 5, 6, 7, 8 };
     vector<int> h2 { 6, 5, 4, 3, 2, 1, 0, 0 };
     vector<int> h3 { 8, 7, 6, 5, 4, 3, 2, 1 };
@@ -63,3 +72,45 @@ float bhatt(vector<int> hist1, vector<int> hist2)
     
     return score;
 }
+
+vector<Histogram> reads_file(string file_name)
+{
+    vector<Histogram> instance;
+    string line;
+    ifstream file (file_name);
+    if (file.is_open())
+    {
+        cout << "Started reading file" << endl;
+
+        while (getline(file, line))
+        {
+            string entry;
+            
+            // ignore the first 2 entries (data and classification)
+            istringstream iss(line);
+            getline(iss, entry, ',');
+            getline(iss, entry, ',');
+            
+            Histogram hist;
+            
+            while(!getline(iss, entry, ',').eof())
+            {
+                int split_pos = entry.find(':');
+
+                string key = entry.substr(0, split_pos);
+                string str_value = entry.substr(split_pos + 1);
+                int value = stoi(str_value);
+
+                hist.insert(std::pair<string,int>(key, value));              
+            }
+
+            instance.push_back(hist);
+        }
+
+        file.close();
+    }
+
+    cout << "Finished reading file" << endl;
+
+    return instance;
+} 
