@@ -15,11 +15,19 @@ typedef map<string, int> Histogram;
 
 float mean(Histogram hist);
 float bhatta(Histogram hist1, Histogram hist2);
-vector<Histogram> reads_file(string file_name);
+vector<Histogram> reads_file(char* file_name);
 
-int main()
+int main(int argc, char *argv[])
 {
-    vector<Histogram> histograms = reads_file("dataset/TestMay03.txt");
+    if (argc < 2)
+    {
+        cerr << "usage: <program> <instance_name>" << endl;
+
+        return EXIT_FAILURE;
+    }
+
+    char *filename = argv[1];
+    vector<Histogram> histograms = reads_file(filename);
 
     vector<vector<float>> scores;
 
@@ -76,11 +84,12 @@ float bhatta(Histogram hist1, Histogram hist2)
     return score;
 }
 
-vector<Histogram> reads_file(string file_name)
+vector<Histogram> reads_file(char* file_name)
 {
     vector<Histogram> instance;
+
     string line;
-    ifstream file (file_name);
+    ifstream file(file_name);
     if (file.is_open())
     {
         cout << "Started reading file" << endl;
@@ -89,7 +98,7 @@ vector<Histogram> reads_file(string file_name)
         {
             string entry;
             
-            // ignore the first 2 entries (data and classification)
+            // ignore the first 2 entries (date and classification)
             istringstream iss(line);
             getline(iss, entry, ',');
             getline(iss, entry, ',');
