@@ -15,7 +15,8 @@ typedef map<string, int> Histogram;
 
 float mean(Histogram hist);
 float bhatta(Histogram hist1, Histogram hist2);
-vector<Histogram> reads_file(char* file_name);
+pair<vector<Histogram>, vector<string>> reads_file(char* file_name);
+int convert_date_to_int(string formatted_date);
 
 int main(int argc, char *argv[])
 {
@@ -27,7 +28,11 @@ int main(int argc, char *argv[])
     }
 
     char *filename = argv[1];
-    vector<Histogram> histograms = reads_file(filename);
+
+    std::pair<vector<Histogram>, vector<string>> dataset = reads_file(filename);
+
+    vector<Histogram> histograms = dataset.first;
+    vector<string> classification = dataset.second;
 
     vector<vector<float>> scores;
 
@@ -77,6 +82,8 @@ float bhatta(Histogram hist1, Histogram hist2)
     for (auto &key : keys)
         score += sqrt(hist1.at(key) * hist2.at(key));
 
+    
+
     // BUG (?): o valor calculado e passado pra esse `sqrt` mais externo é negativo, o que retorna um nan
 
     score = sqrt( 1 - ( 1 / sqrt(h1_ * h2_ * 8 * 8) ) * score );
@@ -84,9 +91,10 @@ float bhatta(Histogram hist1, Histogram hist2)
     return score;
 }
 
-vector<Histogram> reads_file(char* file_name)
+pair<vector<Histogram>, vector<string>> reads_file(char* file_name)
 {
     vector<Histogram> instance;
+    vector<string> classification;
 
     string line;
     ifstream file(file_name);
@@ -96,14 +104,17 @@ vector<Histogram> reads_file(char* file_name)
 
         while (getline(file, line))
         {
+            Histogram hist;
+            
             string entry;
             
-            // ignore the first 2 entries (date and classification)
             istringstream iss(line);
+
             getline(iss, entry, ',');
+            hist.insert(std::pair<string,int>("date", convert_date_to_int(entry)));
+
             getline(iss, entry, ',');
-            
-            Histogram hist;
+            classification.push_back(entry);
             
             while(!getline(iss, entry, ',').eof())
             {
@@ -124,5 +135,14 @@ vector<Histogram> reads_file(char* file_name)
 
     cout << "Finished reading file" << endl;
 
-    return instance;
-} 
+    return pair<vector<Histogram>, vector<string>>(instance, classification);
+}
+
+int convert_date_to_int(string formatted_date)
+{
+    string date;
+    for (char c : formatted_date)
+        if (c != '/') date += c;
+
+    return stoi(date);
+}
