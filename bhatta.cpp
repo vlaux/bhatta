@@ -67,9 +67,9 @@ float mean(Histogram hist)
 
 float bhatta(Histogram hist1, Histogram hist2)
 {
-    float h1_ = mean(hist1);
+    float h1_mean = mean(hist1);
 
-    float h2_ = mean(hist2);
+    float h2_mean = mean(hist2);
 
     float score = 0;
 
@@ -82,12 +82,8 @@ float bhatta(Histogram hist1, Histogram hist2)
     for (auto &key : keys)
         score += sqrt(hist1.at(key) * hist2.at(key));
 
-    
+    score = sqrt( 1 - ( 1 / sqrt(h1_mean * h2_mean * hist1.size() * hist2.size()) ) * score );
 
-    // BUG (?): o valor calculado e passado pra esse `sqrt` mais externo é negativo, o que retorna um nan
-
-    score = sqrt( 1 - ( 1 / sqrt(h1_ * h2_ * 8 * 8) ) * score );
-    
     return score;
 }
 
@@ -111,7 +107,8 @@ pair<vector<Histogram>, vector<string>> reads_file(char* file_name)
             istringstream iss(line);
 
             getline(iss, entry, ',');
-            hist.insert(std::pair<string,int>("date", convert_date_to_int(entry)));
+            // Ignoring date entry for now            
+            //hist.insert(std::pair<string,int>("date", convert_date_to_int(entry)));
 
             getline(iss, entry, ',');
             classification.push_back(entry);
