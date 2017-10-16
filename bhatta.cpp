@@ -24,7 +24,6 @@ int main(int argc, char *argv[])
     if (argc < 2)
     {
         cerr << "usage: <program> <instance_name>" << endl;
-
         return EXIT_FAILURE;
     }
 
@@ -35,24 +34,22 @@ int main(int argc, char *argv[])
     vector<Histogram> histograms = dataset.first;
     vector<string> classification = dataset.second;
 
-    vector<vector<float>> scores;
+    float** scores = (float**) malloc(histograms.size() * sizeof(float*));
+
+    for (int i=0; i<histograms.size(); i++)
+        scores[i] = (float*) malloc(histograms.size() * sizeof(float));
+
+    for (int i=0; i<histograms.size(); i++)
+        for (int j=0; j<histograms.size(); j++)
+            scores[i][j] = (bhatta(histograms[i], histograms[j]));
 
     for (int i=0; i<histograms.size(); i++)
     {
-        vector<float> score;
-
         for (int j=0; j<histograms.size(); j++)
-            score.push_back(bhatta(histograms[i], histograms[j]));
+            cout << scores[i][j] << " ";
 
-        scores.push_back(score);
+        cout << endl;
     }
-
-    for_each(scores.begin(), scores.end(), [](vector<float> score) 
-        { 
-            for_each(score.begin(), score.end(), [](float val) { cout << val << ' '; });
-            cout << endl;
-        }
-    );
     
     return 0;
 }
@@ -74,14 +71,10 @@ float bhatta(Histogram hist1, Histogram hist2)
 
     float score = 0;
 
-    // set of keys (features) that exist in both maps (histograms)
-    set<string> keys;
+    // evaluate only keys present on both histograms
     for (auto &pair : hist1)
-        if (hist2.find(pair.first) != hist2.end())
-            keys.insert(pair.first);
-
-    for (auto &key : keys)
-        score += sqrt(hist1.at(key) * hist2.at(key));
+        if (hist2.find(pair.first) != hist2.end()) 
+            score += sqrt(hist1.at(pair.first) * hist2.at(pair.first));            
 
     score = sqrt( 1 - ( 1 / sqrt(h1_mean * h2_mean * hist1.size() * hist2.size()) ) * score );
 
