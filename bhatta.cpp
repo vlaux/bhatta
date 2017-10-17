@@ -9,6 +9,7 @@
 #include <sstream>
 #include <assert.h>
 #include <algorithm>
+#include <omp.h>
 
 using namespace std;
 
@@ -39,9 +40,11 @@ int main(int argc, char *argv[])
     for (int i=0; i<histograms.size(); i++)
         scores[i] = (float*) malloc(histograms.size() * sizeof(float));
 
-    for (int i=0; i<histograms.size(); i++)
+    #pragma omp parallel for
+    for (int i=0; i<histograms.size(); i++) {
         for (int j=0; j<histograms.size(); j++)
             scores[i][j] = (bhatta(histograms[i], histograms[j]));
+    }
 
     for (int i=0; i<histograms.size(); i++)
     {
@@ -50,7 +53,9 @@ int main(int argc, char *argv[])
 
         cout << endl;
     }
-    
+
+    cout << "Done with " << filename << endl;
+
     return 0;
 }
 
