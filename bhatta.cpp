@@ -9,7 +9,11 @@
 #include <sstream>
 #include <assert.h>
 #include <algorithm>
+#include <ctime>
+
+#ifdef PARALLEL
 #include <omp.h>
+#endif
 
 using namespace std;
 
@@ -19,9 +23,12 @@ float mean(Histogram hist);
 float bhatta(Histogram hist1, Histogram hist2);
 pair<vector<Histogram>, vector<string>> reads_file(char* file_name);
 int convert_date_to_int(string formatted_date);
+void write_results_to_file(char* filename, double elapsed_sec);
 
 int main(int argc, char *argv[])
 {
+    clock_t begin = clock();
+
     if (argc < 2)
     {
         cerr << "usage: <program> <instance_name>" << endl;
@@ -40,12 +47,16 @@ int main(int argc, char *argv[])
     for (int i=0; i<histograms.size(); i++)
         scores[i] = (float*) malloc(histograms.size() * sizeof(float));
 
+    #ifdef PARALLEL
     #pragma omp parallel for
-    for (int i=0; i<histograms.size(); i++) {
+    #endif    
+    for (int i=0; i<histograms.size(); i++) 
+    {
         for (int j=0; j<histograms.size(); j++)
             scores[i][j] = (bhatta(histograms[i], histograms[j]));
     }
 
+    #ifdef DEBUG    
     for (int i=0; i<histograms.size(); i++)
     {
         for (int j=0; j<histograms.size(); j++)
@@ -53,8 +64,22 @@ int main(int argc, char *argv[])
 
         cout << endl;
     }
+    #endif
 
+    #ifdef DEBUG
     cout << "Done with " << filename << endl;
+    #endif
+
+    clock_t end = clock();
+    double elapsed_sec = double(end - begin) / CLOCKS_PER_SEC;
+
+    #ifdef DEBUG    
+    cout << "Elapsed time: " << elapsed_sec << "s" << endl;
+    #endif
+
+    #ifdef RESULTSFILE
+    write_results_to_file(filename, elapsed_sec);
+    #endif
 
     return 0;
 }
@@ -95,7 +120,9 @@ pair<vector<Histogram>, vector<string>> reads_file(char* file_name)
     ifstream file(file_name);
     if (file.is_open())
     {
+        #ifdef DEBUG
         cout << "Started reading file" << endl;
+        #endif
 
         while (getline(file, line))
         {
@@ -107,7 +134,7 @@ pair<vector<Histogram>, vector<string>> reads_file(char* file_name)
 
             getline(iss, entry, ',');
             // Ignoring date entry for now            
-            //hist.insert(std::pair<string,int>("date", convert_date_to_int(entry)));
+            // hist.insert(std::pair<string,int>("date", convert_date_to_int(entry)));
 
             getline(iss, entry, ',');
             classification.push_back(entry);
@@ -129,7 +156,9 @@ pair<vector<Histogram>, vector<string>> reads_file(char* file_name)
         file.close();
     }
 
+    #ifdef DEBUG    
     cout << "Finished reading file" << endl;
+    #endif
 
     return pair<vector<Histogram>, vector<string>>(instance, classification);
 }
@@ -141,4 +170,20 @@ int convert_date_to_int(string formatted_date)
         if (c != '/') date += c;
 
     return stoi(date);
+}
+
+void write_results_to_file(char* filename, double elapsed_sec)
+{
+    ofstream results_file;
+    results_file.open(strcat(filename, ".res"), std::ios_base::app);
+    if (results_file.is_open())
+    {
+        #ifdef PARALLEL
+        results_file << "C=" << omp_get_thread_num() << "\t";
+        #endif
+
+        results_file << "T=" << elapsed_sec << endl;
+    }
+
+    results_file.close();
 }
