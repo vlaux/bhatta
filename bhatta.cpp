@@ -9,6 +9,7 @@
 #include <sstream>
 #include <assert.h>
 #include <algorithm>
+#include <cstring>
 #include <ctime>
 
 #ifdef PARALLEL
