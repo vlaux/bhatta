@@ -10,7 +10,7 @@
 #include <assert.h>
 #include <algorithm>
 #include <cstring>
-#include <ctime>
+#include <sys/time.h>
 
 #ifdef PARALLEL
 #include <omp.h>
@@ -23,12 +23,18 @@ typedef map<string, int> Histogram;
 float mean(Histogram hist);
 float bhatta(Histogram hist1, Histogram hist2);
 pair<vector<Histogram>, vector<string>> reads_file(char* file_name);
-int convert_date_to_int(string formatted_date);
-void write_results_to_file(char* filename, double elapsed_sec);
+void write_results_to_file(char* filename, int n_threads, long double elapsed_time);
+long double timedifference_msec(struct timeval start, struct timeval end);
 
 int main(int argc, char *argv[])
 {
-    clock_t begin = clock();
+    timeval begin_time;
+    timeval end_time;
+
+    // default is 1
+    int n_threads = 1;
+
+    gettimeofday(&begin_time, 0);
 
     if (argc < 2)
     {
@@ -50,6 +56,7 @@ int main(int argc, char *argv[])
 
     #ifdef PARALLEL
     #pragma omp parallel for
+    n_threads = omp_get_thread_num();
     #endif    
     for (int i=0; i<histograms.size(); i++) 
     {
@@ -71,15 +78,16 @@ int main(int argc, char *argv[])
     cout << "Done with " << filename << endl;
     #endif
 
-    clock_t end = clock();
-    double elapsed_sec = double(end - begin) / CLOCKS_PER_SEC;
+    gettimeofday(&end_time, 0);
+
+    long int elapsed_sec = timedifference_msec(begin_time, end_time);
 
     #ifdef DEBUG    
-    cout << "Elapsed time: " << elapsed_sec << "s" << endl;
+    cout << "Elapsed time: " << elapsed_sec << "ms" << endl;
     #endif
 
     #ifdef RESULTSFILE
-    write_results_to_file(filename, elapsed_sec);
+    write_results_to_file(filename, n_threads, elapsed_sec);
     #endif
 
     return 0;
@@ -133,9 +141,8 @@ pair<vector<Histogram>, vector<string>> reads_file(char* file_name)
             
             istringstream iss(line);
 
+            // Ignoring date entry for now
             getline(iss, entry, ',');
-            // Ignoring date entry for now            
-            // hist.insert(std::pair<string,int>("date", convert_date_to_int(entry)));
 
             getline(iss, entry, ',');
             classification.push_back(entry);
@@ -164,27 +171,26 @@ pair<vector<Histogram>, vector<string>> reads_file(char* file_name)
     return pair<vector<Histogram>, vector<string>>(instance, classification);
 }
 
-int convert_date_to_int(string formatted_date)
-{
-    string date;
-    for (char c : formatted_date)
-        if (c != '/') date += c;
-
-    return stoi(date);
-}
-
-void write_results_to_file(char* filename, double elapsed_sec)
+void write_results_to_file(char* filename, int n_threads, long double elapsed_time)
 {
     ofstream results_file;
-    results_file.open(strcat(filename, ".res"), std::ios_base::app);
+    results_file.open("results.txt", std::ios_base::app);
     if (results_file.is_open())
     {
-        #ifdef PARALLEL
-        results_file << "C=" << omp_get_thread_num() << "\t";
-        #endif
+        results_file << "FILE=" << filename << "\t";
+        results_file << "N_THREADS=" << n_threads << "\t";
+        results_file << "T=" << elapsed_time << endl;
 
-        results_file << "T=" << elapsed_sec << endl;
+        cout << "Results writen to file" << endl;
     }
+    else 
+        cout << "Could not write results to file" << endl;
 
     results_file.close();
+}
+
+long double timedifference_msec(struct timeval start, struct timeval end)
+{
+    return (end.tv_sec * 1000 + end.tv_usec / 1000)
+            - (start.tv_sec * 1000 + start.tv_usec / 1000);
 }
