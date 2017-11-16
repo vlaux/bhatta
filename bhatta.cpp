@@ -55,8 +55,7 @@ int main(int argc, char *argv[])
         scores[i] = (float*) malloc(histograms.size() * sizeof(float));
 
     #ifdef PARALLEL
-    #pragma omp parallel for
-    n_threads = omp_get_thread_num();
+    #pragma omp parallel for num_threads(N_THREADS)
     #endif    
     for (int i=0; i<histograms.size(); i++) 
     {
@@ -87,7 +86,7 @@ int main(int argc, char *argv[])
     #endif
 
     #ifdef RESULTSFILE
-    write_results_to_file(filename, n_threads, elapsed_sec);
+    write_results_to_file(filename, N_THREADS, elapsed_sec);
     #endif
 
     return 0;
