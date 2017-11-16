@@ -181,10 +181,10 @@ void write_results_to_file(char* filename, string version, int n_threads, long d
         results_file << "N_THREADS=" << n_threads << "\t";
         results_file << "T=" << elapsed_time << endl;
 
-        cout << "Results writen to file" << endl;
+        #ifdef DEBUG
+        cout << "Results written to file" << endl;
+        #endif
     }
-    else 
-        cout << "Could not write results to file" << endl;
 
     results_file.close();
 }
