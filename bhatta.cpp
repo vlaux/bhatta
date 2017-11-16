@@ -23,7 +23,7 @@ typedef map<string, int> Histogram;
 float mean(Histogram hist);
 float bhatta(Histogram hist1, Histogram hist2);
 pair<vector<Histogram>, vector<string>> reads_file(char* file_name);
-void write_results_to_file(char* filename, int n_threads, long double elapsed_time);
+void write_results_to_file(char* filename, string version, int n_threads, long double elapsed_time);
 long double timedifference_msec(struct timeval start, struct timeval end);
 
 int main(int argc, char *argv[])
@@ -55,6 +55,7 @@ int main(int argc, char *argv[])
         scores[i] = (float*) malloc(histograms.size() * sizeof(float));
 
     #ifdef PARALLEL
+    n_threads = N_THREADS;
     #pragma omp parallel for num_threads(N_THREADS)
     #endif    
     for (int i=0; i<histograms.size(); i++) 
@@ -86,7 +87,7 @@ int main(int argc, char *argv[])
     #endif
 
     #ifdef RESULTSFILE
-    write_results_to_file(filename, N_THREADS, elapsed_sec);
+    write_results_to_file(filename, argv[0], n_threads, elapsed_sec);
     #endif
 
     return 0;
@@ -170,10 +171,10 @@ pair<vector<Histogram>, vector<string>> reads_file(char* file_name)
     return pair<vector<Histogram>, vector<string>>(instance, classification);
 }
 
-void write_results_to_file(char* filename, int n_threads, long double elapsed_time)
+void write_results_to_file(char* filename, string version, int n_threads, long double elapsed_time)
 {
     ofstream results_file;
-    results_file.open("results.txt", std::ios_base::app);
+    results_file.open(version + "_results.txt", std::ios_base::app);
     if (results_file.is_open())
     {
         results_file << "FILE=" << filename << "\t";
