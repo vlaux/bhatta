@@ -80,14 +80,14 @@ int main(int argc, char *argv[])
 
     gettimeofday(&end_time, 0);
 
-    long int elapsed_sec = timedifference_msec(begin_time, end_time);
+    long int elapsed_msec = timedifference_msec(begin_time, end_time);
 
     #ifdef DEBUG    
-    cout << "Elapsed time: " << elapsed_sec << "ms" << endl;
+    cout << "Elapsed time: " << elapsed_msec << "ms" << endl;
     #endif
 
     #ifdef RESULTSFILE
-    write_results_to_file(filename, argv[0], n_threads, elapsed_sec);
+    write_results_to_file(filename, argv[0], n_threads, elapsed_msec);
     #endif
 
     return 0;
